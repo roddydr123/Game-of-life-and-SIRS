@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numba import njit
 
 # Set up the grid
 grid_size = 50
@@ -11,6 +12,7 @@ live_cells = np.random.choice(grid_size**2, num_live_cells, replace=False)
 grid[np.unravel_index(live_cells, (grid_size, grid_size))] = 1
 
 # Update the grid based on the Game of Life rules
+@njit
 def update_grid(grid):
     new_grid = np.zeros_like(grid)
     for i in range(grid_size):
@@ -24,17 +26,11 @@ def update_grid(grid):
                 new_grid[i, j] = 1
     return new_grid
 
-# Visualize the grid
-def plot_grid(grid):
-    plt.imshow(grid, cmap='binary')
-
-# Run the simulation
-num_generations = 100
 
 fig, ax = plt.subplots()
 im=ax.imshow(grid, animated=True)
 
-for generation in range(num_generations):
+while True:
     grid = update_grid(grid)
     fig.canvas.flush_events()
     im=ax.imshow(grid, animated=True)
