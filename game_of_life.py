@@ -2,18 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numba import njit
 
-# Set up the grid
-grid_size = 50
-grid = np.zeros((grid_size, grid_size))
 
-# Initialize the grid with some live cells
-num_live_cells = 1000
-live_cells = np.random.choice(grid_size**2, num_live_cells, replace=False)
-grid[np.unravel_index(live_cells, (grid_size, grid_size))] = 1
 
-# Update the grid based on the Game of Life rules
 @njit
-def update_grid(grid):
+def update_grid(grid, grid_size):
     new_grid = np.zeros_like(grid)
     for i in range(grid_size):
         for j in range(grid_size):
@@ -27,12 +19,25 @@ def update_grid(grid):
     return new_grid
 
 
-fig, ax = plt.subplots()
-im=ax.imshow(grid, animated=True)
+def visualisation():
 
-while True:
-    grid = update_grid(grid)
-    fig.canvas.flush_events()
+    # Set up the grid
+    grid_size = 50
+    grid = np.zeros((grid_size, grid_size))
+
+    # Initialize the grid with some live cells
+    num_live_cells = 1000
+    live_cells = np.random.choice(grid_size**2, num_live_cells, replace=False)
+    grid[np.unravel_index(live_cells, (grid_size, grid_size))] = 1
+
+    fig, ax = plt.subplots()
     im=ax.imshow(grid, animated=True)
-    ax.draw_artist(im)
-    plt.pause(0.011)
+
+    while True:
+        grid = update_grid(grid, grid_size)
+        fig.canvas.flush_events()
+        im=ax.imshow(grid, animated=True)
+        ax.draw_artist(im)
+        plt.pause(0.001)
+
+visualisation()
