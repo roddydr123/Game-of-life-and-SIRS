@@ -1,43 +1,104 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import njit
+import matplotlib.animation as animation
+import sys
 
 
 
-@njit
-def update_grid(grid, grid_size):
-    new_grid = np.zeros_like(grid)
+def check_active(grid):
+    active = np.sum(grid)
+    with open("active_sites.dat", "a") as f:
+        f.write(str(active) + "\n")
+
+
+def update_grid(i, im, grid, grid_size):
+    # Copy the current grid to avoid overwriting values
+    new_grid = grid.copy()
+    # Loop over each cell in the grid
     for i in range(grid_size):
         for j in range(grid_size):
-            # Count the number of live neighbors
-            num_live_neighbors = np.sum(grid[max(i-1, 0):min(i+2, grid_size), max(j-1, 0):min(j+2, grid_size)]) - grid[i, j]
-            # Apply the Game of Life rules
-            if grid[i, j] == 1 and num_live_neighbors in [2, 3]:
-                new_grid[i, j] = 1
-            elif grid[i, j] == 0 and num_live_neighbors == 3:
-                new_grid[i, j] = 1
-    return new_grid
+            # Count the number of live neighbours for the current cell
+            num_neighbours = (
+                grid[(i-1)%grid_size,(j-1)%grid_size] +
+                grid[(i-1)%grid_size,j] +
+                grid[(i-1)%grid_size,(j+1)%grid_size] +
+                grid[i,(j-1)%grid_size] +
+                grid[i,(j+1)%grid_size] +
+                grid[(i+1)%grid_size,(j-1)%grid_size] +
+                grid[(i+1)%grid_size,j] +
+                grid[(i+1)%grid_size,(j+1)%grid_size]
+            )
+            # Apply the rules of the game of life
+            if grid[i,j] == 1 and (num_neighbours < 2 or num_neighbours > 3):
+                new_grid[i,j] = 0
+            elif grid[i,j] == 0 and num_neighbours == 3:
+                new_grid[i,j] = 1
+    # Update the grid
+    im.set_data(new_grid)
+    grid[:] = new_grid[:]
+    return im
 
 
-def visualisation():
+def random_grid(grid_size):
+    grid = np.random.randint(2, size=(grid_size, grid_size))
+    return grid
 
-    # Set up the grid
-    grid_size = 50
+
+def oscillator_grid(grid_size):
     grid = np.zeros((grid_size, grid_size))
+    mid = int(grid_size / 2)
+    grid[mid, mid] = 1
+    grid[mid + 1, mid] = 1
+    grid[mid - 1, mid] = 1
+    return grid
 
-    # Initialize the grid with some live cells
-    num_live_cells = 1000
-    live_cells = np.random.choice(grid_size**2, num_live_cells, replace=False)
-    grid[np.unravel_index(live_cells, (grid_size, grid_size))] = 1
+
+def glider_grid(grid_size):
+    grid = np.zeros((grid_size, grid_size))
+    mid = int(grid_size / 2)
+    grid[mid, mid] = 1
+    grid[mid + 1, mid] = 1
+    grid[mid - 1, mid] = 1
+    grid[mid + 1, mid + 1] = 1
+    grid[mid, mid + 2] = 1
+    return grid
+
+
+def visualisation(grid, grid_size, monitor_sites):
 
     fig, ax = plt.subplots()
-    im=ax.imshow(grid, animated=True)
 
-    while True:
-        grid = update_grid(grid, grid_size)
-        fig.canvas.flush_events()
-        im=ax.imshow(grid, animated=True)
-        ax.draw_artist(im)
-        plt.pause(0.001)
+    # Create an image object to display the grid
+    im = ax.imshow(grid)
 
-visualisation()
+    active_list = []
+
+    # Create the animation object
+    ani = animation.FuncAnimation(fig, update_grid, frames=1000, fargs=(im, grid, grid_size), interval=10)
+
+    # Display the animation
+    plt.show()
+
+
+def main():
+    cmd_args = sys.argv
+    if len(cmd_args) != 2:
+        print("Usage game_of_life.py <mode> (Random, Oscillator, Glider)")
+        sys.exit()
+    mode = cmd_args[1]
+
+    grid_size = 50
+    monitor_sites = True
+
+    if mode == "R":
+        grid = random_grid(grid_size)
+    elif mode == "O":
+        grid = oscillator_grid(grid_size)
+    elif mode == "G":
+        grid = glider_grid(grid_size)
+    else:
+        print("invalid mode")
+        sys.exit()
+    visualisation(grid, grid_size, monitor_sites)
+
+main()
