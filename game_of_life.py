@@ -5,13 +5,24 @@ import sys
 
 
 
-def check_active(grid):
+def check_active(grid, i):
     active = np.sum(grid)
     with open("active_sites.dat", "a") as f:
         f.write(str(active) + "\n")
+    if i % 10 == 0:
+        with open("active_sites.dat", "r") as f:
+            lines = [line.strip() for line in f]
+            if len(set(lines[-10:])) <= 1:
+                print(f"stopped after {i} iterations")
+                sys.exit(0)
+
 
 
 def update_grid(i, im, grid, grid_size):
+
+    # count active cells
+    check_active(grid, i)
+
     # Copy the current grid to avoid overwriting values
     new_grid = grid.copy()
     # Loop over each cell in the grid
@@ -70,8 +81,6 @@ def visualisation(grid, grid_size, monitor_sites):
 
     # Create an image object to display the grid
     im = ax.imshow(grid)
-
-    active_list = []
 
     # Create the animation object
     ani = animation.FuncAnimation(fig, update_grid, frames=1000, fargs=(im, grid, grid_size), interval=10)
