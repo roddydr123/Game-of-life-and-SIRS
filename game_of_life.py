@@ -107,6 +107,15 @@ def equilibrations():
             i += 1
 
 
+def plot_equilibrations():
+    with open("equlibrations.dat", "r") as f:
+        lines = [line for line in f]
+
+    x = list(map(int, lines))
+    plt.hist(x, bins=30)
+    print(len(x))
+    plt.show()
+
 
 def main():
     cmd_args = sys.argv
@@ -129,4 +138,5 @@ def main():
     visualisation(grid, grid_size, mode)
 
 # main()
-equilibrations()
+# equilibrations()
+plot_equilibrations()
