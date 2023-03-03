@@ -4,51 +4,42 @@ import matplotlib.animation as animation
 import sys
 
 
-def linear(x, m, c):
-    return (m * x) + c
 
+def update_grid(frame, im, grid, grid_size, p_vals):
 
-def update_grid(frame, im, grid, grid_size, mode):
+    for step in range(grid_size**2):
 
-    active_sites = np.sum(grid)
+        i, j = np.random.randint(0, grid_size, size=(2,))
 
-    # Copy the current grid to avoid overwriting values
-    new_grid = grid.copy()
-    # Loop over each cell in the grid
-    for i in range(grid_size):
-        for j in range(grid_size):
-            # Count the number of live neighbours for the current cell
-            num_neighbours = (
-                grid[(i-1)%grid_size,(j-1)%grid_size] +
-                grid[(i-1)%grid_size,j] +
-                grid[(i-1)%grid_size,(j+1)%grid_size] +
-                grid[i,(j-1)%grid_size] +
-                grid[i,(j+1)%grid_size] +
-                grid[(i+1)%grid_size,(j-1)%grid_size] +
-                grid[(i+1)%grid_size,j] +
-                grid[(i+1)%grid_size,(j+1)%grid_size]
+        # if susceptible
+        if grid[i,j] == 0:
+            neighbours = (
+                grid[(i-1)%grid_size,j],
+                grid[i,(j-1)%grid_size],
+                grid[i,(j+1)%grid_size],
+                grid[(i+1)%grid_size,j]
             )
-            # Apply the rules of the game of life
-            if grid[i,j] == 1 and (num_neighbours < 2 or num_neighbours > 3):
-                new_grid[i,j] = 0
-            elif grid[i,j] == 0 and num_neighbours == 3:
-                new_grid[i,j] = 1
+            # if there's an infected next door
+            if 1 in neighbours:
+                if p_vals[0] > np.random.rand():
+                    grid[i,j] = 1
 
-    grid[:] = new_grid[:]
+        # if infected
+        elif grid[i,j] == 1:
+            if p_vals[1] > np.random.rand():
+                grid[i,j] = 2
 
-    try:
-        im.set_data(new_grid)
-    except:
-        pass
-    return im, active_sites, grid
+        # if recovered
+        elif grid[i,j] == 2:
+            if p_vals[2] > np.random.rand():
+                grid[i,j] = 0
+
+    im.set_data(grid)
+
+    return im
 
 
-def random_grid(grid_size):
-    grid = np.random.randint(2, size=(grid_size, grid_size))
-    return grid
-
-
-def visualisation(grid, grid_size, mode):
+def visualisation(grid, grid_size, p_vals):
 
     fig, ax = plt.subplots()
 
@@ -56,7 +47,7 @@ def visualisation(grid, grid_size, mode):
     im = ax.imshow(grid)
 
     # Create the animation object
-    ani = animation.FuncAnimation(fig, update_grid, frames=1000, fargs=(im, grid, grid_size), interval=10)
+    ani = animation.FuncAnimation(fig, update_grid, frames=1000, fargs=(im, grid, grid_size, p_vals), interval=10)
 
     # Display the animation
     plt.show()
@@ -68,10 +59,12 @@ def main():
         print("Usage SIRS.py <grid_size> <p1> <p2> <p3>")
         sys.exit()
 
-    grid_size = cmd_args[1]
+    grid_size = int(cmd_args[1])
 
-    grid = random_grid(grid_size)
+    grid = np.random.randint(3, size=(grid_size, grid_size))
 
-    visualisation(grid, grid_size)
+    p_vals = [float(x) for x in cmd_args[2:]]
+
+    visualisation(grid, grid_size, p_vals)
 
 main()
