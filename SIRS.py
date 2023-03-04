@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import sys
 from tqdm import tqdm
-
+from numba import njit
 
 
 def update_grid(frame, im, grid, grid_size, p_vals):
@@ -56,9 +56,59 @@ def visualisation(grid, grid_size, p_vals):
     plt.show()
 
 
+
+def variance(grid_size):
+
+    p_space = np.arange(0.2, 0.5, 0.05)
+    p2 = 0.5
+    p3 = 0.5
+
+    f = open("variance_plot.dat", "w")
+    f.write("p1, p2, p3, var(I)\n")
+    f.close()
+
+    no_iterations = 200
+
+    for p1 in p_space:
+        # for each set of probabilities
+        p_vals = [p1, p2, p3]
+        print(p_vals)
+        inf_sites_list = np.zeros(no_iterations)
+
+        grid = np.random.randint(3, size=(grid_size, grid_size))
+
+        # run 10100 times to get measurements
+        for k in tqdm(range(no_iterations + 100)):
+            inf_sites = update_grid(None, None, grid, grid_size, p_vals)[1]
+            if inf_sites == 0:
+                break
+
+            # only take measurements past 100 sweeps
+            if k >= 100:
+                inf_sites_list[k-100] = inf_sites
+
+        norm_variance = np.var(inf_sites_list)/grid_size**2
+
+        f = open("variance_plot.dat", "a")
+        f.write(f"{p1},{p2},{p3},{norm_variance}\n")
+        f.close()
+
+
+def plot_variance():
+    data = np.genfromtxt("variance_plot.dat", delimiter=",", skip_header=1, dtype=float)
+
+    norm_var_I = np.array(data[:,3])
+    p1s = np.array(data[:,0])
+    fig, ax = plt.subplots()
+    ax.plot(p1s, norm_var_I)
+    ax.set_xlabel("P1")
+    ax.set_ylabel("normalised variance of infected")
+    plt.show()
+
+
 def phase(grid_size):
 
-    p_space = np.arange(0, 1, 0.3)
+    p_space = np.arange(0, 1, 0.05)
     p2 = 0.5
 
     with open("colour_plot.dat", "w") as f:
@@ -85,7 +135,7 @@ def phase(grid_size):
                     inf_sites_list[k-100] = inf_sites
 
             with open("colour_plot.dat", "a") as f:
-                f.write(f"{p1},{p2},{p3},{np.average(inf_sites_list)}\n")
+                f.write(f"{p1},{p2},{p3},{np.average(inf_sites_list)/grid_size**2}\n")
 
 
 
@@ -103,22 +153,29 @@ def plot_phase():
 def main():
     cmd_args = sys.argv
     if len(cmd_args) == 1:
-        print("Usage SIRS.py <grid_size> <p1> <p2> <p3>")
+        print("Usage SIRS.py <mode> <grid_size> <p1> <p2> <p3>")
         sys.exit()
 
-    if cmd_args[1] == "plot":
+    mode = cmd_args[1]
+
+    if mode == "phase_plot":
         plot_phase()
         return
+    elif mode == "var_plot":
+        plot_variance()
+        return
 
-    grid_size = int(cmd_args[1])
+    grid_size = int(cmd_args[2])
 
     grid = np.random.randint(3, size=(grid_size, grid_size))
 
     p_vals = [float(x) for x in cmd_args[2:]]
 
-    if len(cmd_args) == 5:
+    if mode == "vis":
         visualisation(grid, grid_size, p_vals)
-    elif len(cmd_args) == 2:
+    elif mode == "phase":
         phase(grid_size)
+    elif mode == "var":
+        variance(grid_size)
 
 main()
