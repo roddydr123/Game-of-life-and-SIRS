@@ -69,7 +69,7 @@ def variance(grid_size):
     f.write("p1, p2, p3, var(I)\n")
     f.close()
 
-    no_iterations = 200
+    no_iterations = 10100
 
     random_grids = np.random.randint(3, size=(len(p_space), grid_size, grid_size))
 
@@ -142,7 +142,6 @@ def phase(grid_size):
 
     with open("SIRS_data/infected_plot.dat", "w") as f:
         f.write("p1,p2,p3,average I\n")
-
 
     for p1 in tqdm(p_space):
         for p3 in p_space:
