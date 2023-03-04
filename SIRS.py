@@ -3,13 +3,16 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import sys
 from tqdm import tqdm
+import timeit
 
 
 def update_grid(frame, im, grid, grid_size, p_vals):
 
+    ijs = np.random.randint(0, grid_size, size=(grid_size**2, 2))
+
     for step in range(grid_size**2):
 
-        i, j = np.random.randint(0, grid_size, size=(2,))
+        i, j = ijs[step]
 
         # if susceptible
         if grid[i,j] == 0:
@@ -68,13 +71,13 @@ def variance(grid_size):
 
     no_iterations = 200
 
-    for p1 in p_space:
+    random_grids = np.random.randint(3, size=(len(p_space), grid_size, grid_size))
+
+    for p1, grid in zip(p_space, random_grids):
         # for each set of probabilities
         p_vals = [p1, p2, p3]
 
         inf_sites_list = np.zeros(no_iterations)
-
-        grid = np.random.randint(3, size=(grid_size, grid_size))
 
         # run 10100 times to get measurements
         for k in tqdm(range(no_iterations + 100)):
@@ -202,5 +205,8 @@ def main():
         phase(grid_size)
     elif mode == "var":
         variance(grid_size)
+    elif mode == "timer":
+        t = timeit.Timer(lambda: update_grid(None, None, grid, grid_size, [0.5,0.5,0.5])) 
+        print(t.timeit(5))
 
 main()
