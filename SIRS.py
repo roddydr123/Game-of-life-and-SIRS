@@ -88,20 +88,45 @@ def variance(grid_size):
 
         norm_variance = np.var(inf_sites_list)/grid_size**2
 
-        np.savetxt(f"var.{p1}.{p2}.{p3}.dat", inf_sites_list)
+        np.savetxt(f"SIRS_data/var.{p1}.{p2}.{p3}.dat", inf_sites_list)
 
         f = open("SIRS_data/variance_plot.dat", "a")
         f.write(f"{p1},{p2},{p3},{norm_variance}\n")
         f.close()
 
+    
+def get_bootstrap_error(filename):
+        
+        inf_list = np.loadtxt(filename)
+        
+        k = 100
+        n = int(0.8 * len(inf_list))
+        
+        variances = np.zeros(k)
+
+        for i in range(k):
+            infecteds = np.random.choice(inf_list, n)
+            variances[i] = np.var(infecteds)
+
+        error = np.std(variances / 50**2)
+        return error
+
 
 def plot_variance():
+    # load in the variances.
     data = np.genfromtxt("SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float)
-
     norm_var_I = np.array(data[:,3])
+
+    errors = []
+
+    # get the error for each variance using the bootstrap method.
+    for p1, p2, p3 in zip(data[:,0], data[:,1], data[:,2]):
+        errors.append(get_bootstrap_error(f"SIRS_data/var.{p1}.{p2}.{p3}.dat"))
+
+    # plot variance as a function of p1.
     p1s = np.array(data[:,0])
     fig, ax = plt.subplots()
-    ax.plot(p1s, norm_var_I)
+    ax.errorbar(p1s, norm_var_I, yerr=errors)
     ax.set_xlabel("P1")
     ax.set_ylabel("normalised variance of infected")
     plt.show()
