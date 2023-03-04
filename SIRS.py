@@ -118,7 +118,6 @@ def phase(grid_size):
         for p3 in p_space:
             # for each set of probabilities
             p_vals = [p1, p2, p3]
-            print(p_vals)
             inf_sites_list = np.zeros(1000)
 
             grid = np.random.randint(3, size=(grid_size, grid_size))
