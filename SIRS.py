@@ -114,7 +114,7 @@ def phase(grid_size):
         f.write("p1,p2,p3,average I\n")
 
 
-    for p1 in p_space:
+    for p1 in tqdm(p_space):
         for p3 in p_space:
             # for each set of probabilities
             p_vals = [p1, p2, p3]
@@ -124,7 +124,7 @@ def phase(grid_size):
             grid = np.random.randint(3, size=(grid_size, grid_size))
 
             # run 1100 times to get measurements
-            for k in tqdm(range(1100)):
+            for k in range(1100):
                 inf_sites = update_grid(None, None, grid, grid_size, p_vals)[1]
                 if inf_sites == 0:
                     break
