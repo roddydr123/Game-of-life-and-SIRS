@@ -73,7 +73,7 @@ def variance(grid_size):
 
     random_grids = np.random.randint(3, size=(len(p_space), grid_size, grid_size))
 
-    for p1, grid in zip(p_space, random_grids):
+    for p1, grid in tqdm(zip(p_space, random_grids), total=len(p_space)):
         # for each set of probabilities
         p_vals = [p1, p2, p3]
 
