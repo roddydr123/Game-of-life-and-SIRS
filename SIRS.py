@@ -58,7 +58,7 @@ def visualisation(grid, grid_size, p_vals):
 
 def phase(grid_size):
 
-    p_space = np.arange(0, 1, 0.05)
+    p_space = np.arange(0, 1, 0.3)
     p2 = 0.5
 
     with open("colour_plot.dat", "w") as f:
@@ -69,6 +69,7 @@ def phase(grid_size):
         for p3 in p_space:
             # for each set of probabilities
             p_vals = [p1, p2, p3]
+            print(p_vals)
             inf_sites_list = np.zeros(1000)
 
             grid = np.random.randint(3, size=(grid_size, grid_size))
@@ -89,8 +90,14 @@ def phase(grid_size):
 
 
 def plot_phase():
-    colour_grid = np.zeros((len(p_space), len(p_space)))
-    colour_grid[i,j] = np.average(inf_sites_list)
+    data = np.genfromtxt("colour_plot.dat", delimiter=",", skip_header=1, dtype=float)
+    d_l = int(len(data)**(1/2))
+    av_I = np.array(data[:,3]).reshape((d_l, d_l))
+    fig, ax = plt.subplots()
+    ax.imshow(av_I, origin="lower", extent=(0,1,0,1))
+    ax.set_xlabel("P1")
+    ax.set_ylabel("P3")
+    plt.show()
 
 
 def main():
@@ -98,6 +105,10 @@ def main():
     if len(cmd_args) == 1:
         print("Usage SIRS.py <grid_size> <p1> <p2> <p3>")
         sys.exit()
+
+    if cmd_args[1] == "plot":
+        plot_phase()
+        return
 
     grid_size = int(cmd_args[1])
 
