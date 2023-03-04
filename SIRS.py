@@ -62,7 +62,7 @@ def variance(grid_size):
     p2 = 0.5
     p3 = 0.5
 
-    f = open("variance_plot.dat", "w")
+    f = open("SIRS_data/variance_plot.dat", "w")
     f.write("p1, p2, p3, var(I)\n")
     f.close()
 
@@ -71,7 +71,7 @@ def variance(grid_size):
     for p1 in p_space:
         # for each set of probabilities
         p_vals = [p1, p2, p3]
-        print(p_vals)
+
         inf_sites_list = np.zeros(no_iterations)
 
         grid = np.random.randint(3, size=(grid_size, grid_size))
@@ -88,13 +88,15 @@ def variance(grid_size):
 
         norm_variance = np.var(inf_sites_list)/grid_size**2
 
-        f = open("variance_plot.dat", "a")
+        np.savetxt(f"var.{p1}.{p2}.{p3}.dat", inf_sites_list)
+
+        f = open("SIRS_data/variance_plot.dat", "a")
         f.write(f"{p1},{p2},{p3},{norm_variance}\n")
         f.close()
 
 
 def plot_variance():
-    data = np.genfromtxt("variance_plot.dat", delimiter=",", skip_header=1, dtype=float)
+    data = np.genfromtxt("SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float)
 
     norm_var_I = np.array(data[:,3])
     p1s = np.array(data[:,0])
@@ -110,7 +112,7 @@ def phase(grid_size):
     p_space = np.arange(0, 1, 0.05)
     p2 = 0.5
 
-    with open("colour_plot.dat", "w") as f:
+    with open("SIRS_data/infected_plot.dat", "w") as f:
         f.write("p1,p2,p3,average I\n")
 
 
@@ -132,13 +134,13 @@ def phase(grid_size):
                 if k >= 100:
                     inf_sites_list[k-100] = inf_sites
 
-            with open("colour_plot.dat", "a") as f:
+            with open("SIRS_data/infected_plot.dat", "a") as f:
                 f.write(f"{p1},{p2},{p3},{np.average(inf_sites_list)/grid_size**2}\n")
 
 
 
 def plot_phase():
-    data = np.genfromtxt("colour_plot.dat", delimiter=",", skip_header=1, dtype=float)
+    data = np.genfromtxt("SIRS_data/infected_plot.dat", delimiter=",", skip_header=1, dtype=float)
     d_l = int(len(data)**(1/2))
     av_I = np.array(data[:,3]).reshape((d_l, d_l))
     fig, ax = plt.subplots()
