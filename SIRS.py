@@ -61,7 +61,7 @@ def visualisation(grid, grid_size, p_vals):
 
 def variance(grid_size):
 
-    p_space = np.arange(0.2, 0.5, 0.05)
+    p_space = np.arange(0.2, 0.5, 0.005)
     p2 = 0.5
     p3 = 0.5
 
@@ -143,13 +143,14 @@ def phase(grid_size):
     with open("SIRS_data/infected_plot.dat", "w") as f:
         f.write("p1,p2,p3,average I\n")
 
-    for p1 in tqdm(p_space):
-        for p3 in p_space:
+    random_grid = np.random.randint(3, size=(len(p_space), len(p_space), grid_size, grid_size))
+
+    for p1, super_grid in tqdm(zip(p_space, random_grid), total=len(p_space)):
+        for p3, grid in zip(p_space, super_grid):
+
             # for each set of probabilities
             p_vals = [p1, p2, p3]
             inf_sites_list = np.zeros(1000)
-
-            grid = np.random.randint(3, size=(grid_size, grid_size))
 
             # run 1100 times to get measurements
             for k in range(1100):
