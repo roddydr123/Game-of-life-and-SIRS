@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import sys
 from tqdm import tqdm
-from numba import njit
 
 
 def update_grid(frame, im, grid, grid_size, p_vals):
