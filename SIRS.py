@@ -64,45 +64,6 @@ def visualisation(grid, grid_size, p_vals):
     plt.show()
 
 
-def variance(grid_size):
-
-    p_space = np.arange(0.2, 0.5, 0.005)
-    p2 = 0.5
-    p3 = 0.5
-
-    f = open("SIRS_data/variance_plot.dat", "w")
-    f.write("p1, p2, p3, var(I)\n")
-    f.close()
-
-    simulation_length = 10100
-
-    random_grids = np.random.randint(3, size=(len(p_space), grid_size, grid_size))
-
-    for p1, grid in tqdm(zip(p_space, random_grids), total=len(p_space)):
-        # for each set of probabilities
-        p_vals = [p1, p2, p3]
-
-        proportion_infected_list = np.zeros(simulation_length)
-
-        # run 10100 times to get measurements
-        for step in range(simulation_length + 100):
-            proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1]
-            if proportion_infected == 0:
-                break
-
-            # only take measurements past 100 sweeps
-            if step >= 100:
-                proportion_infected_list[step - 100] = proportion_infected
-
-        norm_variance = np.var(proportion_infected_list) / grid_size**2
-
-        np.savetxt(f"SIRS_data/var.{p1}.{p2}.{p3}.dat", proportion_infected_list)
-
-        f = open("SIRS_data/variance_plot.dat", "a")
-        f.write(f"{p1},{p2},{p3},{norm_variance}\n")
-        f.close()
-
-
 def get_bootstrap_error(filename):
 
     inf_list = np.loadtxt(filename)
@@ -120,25 +81,83 @@ def get_bootstrap_error(filename):
     return error
 
 
-def plot_variance():
-    # load in the variances.
-    data = np.genfromtxt(
-        "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
+def variance(grid_size):
+
+    p_space = np.arange(0, 1, 0.05)
+    p2 = 0.5
+
+    simulation_length = 200
+
+    with open("SIRS_data/variance_plot.dat", "w") as f:
+        f.write("p1, p2, p3, variance(I)/N\n")
+
+    random_grid = np.random.randint(
+        3, size=(len(p_space), len(p_space), grid_size, grid_size)
     )
-    norm_var_I = np.array(data[:, 3])
 
-    errors = []
+    for p1, super_grid in tqdm(zip(p_space, random_grid), total=len(p_space)):
+        for p3, grid in zip(p_space, super_grid):
 
-    # get the error for each variance using the bootstrap method.
-    for p1, p2, p3 in zip(data[:, 0], data[:, 1], data[:, 2]):
-        errors.append(get_bootstrap_error(f"SIRS_data/var.{p1}.{p2}.{p3}.dat"))
+            ### BEGIN SINGLE SIMULATION ###
 
-    # plot variance as a function of p1.
-    p1s = np.array(data[:, 0])
+            p_vals = [p1, p2, p3]
+            proportion_infected_list = np.zeros(simulation_length)
+
+            for step in range(simulation_length + 100):
+                proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+                if proportion_infected == 0:
+                    break
+
+                # only take measurements past 100 sweeps
+                if step >= 100:
+                    proportion_infected_list[step - 100] = proportion_infected
+
+            proportion_infected_list = proportion_infected_list[::10]
+
+            np.savetxt(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat", proportion_infected_list)
+
+            # save the variance infected for that simulation
+            with open(f"SIRS_data/variance_plot.dat", "a") as f:
+                f.write(f"{p1},{p2},{p3},{np.var(proportion_infected_list)}\n")
+            
+
+            ### SINGLE SIMULATION END ###
+
+
+def plot_variance(colour=True):
+
+    data = np.genfromtxt(
+            "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
+        )
+    
     fig, ax = plt.subplots()
-    ax.errorbar(p1s, norm_var_I, yerr=errors)
-    ax.set_xlabel("P1")
-    ax.set_ylabel("normalised variance of infected")
+
+    if not colour:
+        norm_var_I = np.array(data[:, 3])
+
+        # make cut from data at p1,p2,p3 = p1,0.5,0.5
+        y = data[data[:,2] == 0.5]
+
+        errors = []
+
+        # get the error for each variance using the bootstrap method.
+        for p1, p2, p3 in zip(data[:, 0], data[:, 1], data[:, 2]):
+            errors.append(get_bootstrap_error(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat"))
+
+        # plot variance as a function of p1.
+        p1s = np.array(data[:, 0])
+        ax.errorbar(p1s, norm_var_I, yerr=errors)
+        ax.set_xlabel("P1")
+        ax.set_ylabel("normalised variance of infected")
+        
+
+    else:
+        d_l = int(len(data) ** (1 / 2))
+        av_I = np.array(data[:, 3]).reshape((d_l, d_l))
+        ax.imshow(av_I, origin="lower", extent=(0, 1, 0, 1))
+        ax.set_xlabel("P1")
+        ax.set_ylabel("P3")
+    
     plt.show()
 
 
@@ -171,12 +190,15 @@ def phase(grid_size):
                 if step >= 100:
                     proportion_infected_list[step - 100] = proportion_infected
 
+            # every 10th measurement to prevent autocorrelation
+            proportion_infected_list = proportion_infected_list[::10]
+
             # save the evolution of that simulation
-            np.savetxt(f"SIRS_data/infected.{p1}.{p2}.{p3}.dat", proportion_infected_list[::10])
+            np.savetxt(f"SIRS_data/infected.{p1}.{p2}.{p3}.dat", proportion_infected_list)
 
             # save the average infected for that simulation
             with open(f"SIRS_data/infected_plot.dat", "a") as f:
-                f.write(f"{p1},{p2},{p3},{np.average(proportion_infected_list)/grid_size**2}\n")
+                f.write(f"{p1},{p2},{p3},{np.average(proportion_infected_list)}\n")
 
 
 def plot_phase():
@@ -233,9 +255,11 @@ def immunity(grid, grid_size, p_vals):
             if step >= 100:
                 proportion_infected_list[step - 100] = proportion_infected
 
+        proportion_infected_list = proportion_infected_list[::10]
+
         # save the evolution of this simulation, only every 10th measurement to prevent autocorrelation.
         np.savetxt(
-            f"SIRS_data/immunity.{proportion_immune}.{p1}.{p2}.{p3}.dat", proportion_infected_list[::10]
+            f"SIRS_data/immunity.{proportion_immune}.{p1}.{p2}.{p3}.dat", proportion_infected_list
         )
 
         # save only the average infected from this simulation
@@ -294,7 +318,7 @@ def main():
         plot_phase()
         return
     elif mode == "var_plot":
-        plot_variance()
+        plot_variance(colour=bool(cmd_args[2]))
         return
     elif mode == "immunity_plot":
         plot_immunity()
