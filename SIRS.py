@@ -86,7 +86,7 @@ def variance(grid_size):
     p_space = np.arange(0, 1, 0.05)
     p2 = 0.5
 
-    simulation_length = 200
+    simulation_length = 10000
 
     with open("SIRS_data/variance_plot.dat", "w") as f:
         f.write("p1, p2, p3, variance(I)/N\n")
