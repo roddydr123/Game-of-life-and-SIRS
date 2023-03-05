@@ -43,9 +43,9 @@ def update_grid(frame, im, grid, grid_size, p_vals):
 
     if im:
         im.set_data(grid)
-    inf_sites = np.sum(grid == 1)
+    proportion_infected = np.sum(grid == 1)
 
-    return im, inf_sites
+    return im, proportion_infected
 
 
 def visualisation(grid, grid_size, p_vals):
@@ -74,7 +74,7 @@ def variance(grid_size):
     f.write("p1, p2, p3, var(I)\n")
     f.close()
 
-    no_iterations = 10100
+    simulation_length = 10100
 
     random_grids = np.random.randint(3, size=(len(p_space), grid_size, grid_size))
 
@@ -82,21 +82,21 @@ def variance(grid_size):
         # for each set of probabilities
         p_vals = [p1, p2, p3]
 
-        inf_sites_list = np.zeros(no_iterations)
+        proportion_infected_list = np.zeros(simulation_length)
 
         # run 10100 times to get measurements
-        for k in range(no_iterations + 100):
-            inf_sites = update_grid(None, None, grid, grid_size, p_vals)[1]
-            if inf_sites == 0:
+        for step in range(simulation_length + 100):
+            proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1]
+            if proportion_infected == 0:
                 break
 
             # only take measurements past 100 sweeps
-            if k >= 100:
-                inf_sites_list[k - 100] = inf_sites
+            if step >= 100:
+                proportion_infected_list[step - 100] = proportion_infected
 
-        norm_variance = np.var(inf_sites_list) / grid_size**2
+        norm_variance = np.var(proportion_infected_list) / grid_size**2
 
-        np.savetxt(f"SIRS_data/var.{p1}.{p2}.{p3}.dat", inf_sites_list)
+        np.savetxt(f"SIRS_data/var.{p1}.{p2}.{p3}.dat", proportion_infected_list)
 
         f = open("SIRS_data/variance_plot.dat", "a")
         f.write(f"{p1},{p2},{p3},{norm_variance}\n")
@@ -107,12 +107,12 @@ def get_bootstrap_error(filename):
 
     inf_list = np.loadtxt(filename)
 
-    k = 100
+    step = 100
     n = int(0.8 * len(inf_list))
 
-    variances = np.zeros(k)
+    variances = np.zeros(step)
 
-    for i in range(k):
+    for i in range(step):
         infecteds = np.random.choice(inf_list, n)
         variances[i] = np.var(infecteds)
 
@@ -159,24 +159,24 @@ def phase(grid_size):
 
             # for each set of probabilities
             p_vals = [p1, p2, p3]
-            inf_sites_list = np.zeros(1000)
+            proportion_infected_list = np.zeros(1000)
 
             # run 1100 times to get measurements
-            for k in range(1100):
-                inf_sites = update_grid(None, None, grid, grid_size, p_vals)[1]
-                if inf_sites == 0:
+            for step in range(1100):
+                proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1]
+                if proportion_infected == 0:
                     break
 
                 # only take measurements past 100 sweeps
-                if k >= 100:
-                    inf_sites_list[k - 100] = inf_sites
+                if step >= 100:
+                    proportion_infected_list[step - 100] = proportion_infected
 
             # save the evolution of that simulation
-            np.savetxt(f"SIRS_data/infected.{p1}.{p2}.{p3}.dat", inf_sites_list[::10])
+            np.savetxt(f"SIRS_data/infected.{p1}.{p2}.{p3}.dat", proportion_infected_list[::10])
 
             # save the average infected for that simulation
             with open(f"SIRS_data/infected_plot.dat", "a") as f:
-                f.write(f"{p1},{p2},{p3},{np.average(inf_sites_list)/grid_size**2}\n")
+                f.write(f"{p1},{p2},{p3},{np.average(proportion_infected_list)/grid_size**2}\n")
 
 
 def plot_phase():
@@ -195,70 +195,69 @@ def plot_phase():
 def immunity(grid, grid_size, p_vals):
 
     # set the percentages of immune people to explore.
-    percentage_range = np.arange(0.01, 1, 0.01)
+    proportion_immune_range = np.arange(0.01, 1, 0.01)
 
     random_grids = np.random.randint(
-        3, size=(len(percentage_range), grid_size, grid_size)
+        3, size=(len(proportion_immune_range), grid_size, grid_size)
     )
 
     p1, p2, p3 = p_vals
 
     # how long should each simulation be?
-    no_iterations = 1000
+    simulation_length = 1000
 
     with open(f"SIRS_data/immunity_plot.{p1}.{p2}.{p3}.dat", "w") as f:
-        f.write("percentage, average I\n")
+        f.write("immune %, <infected> %\n")
 
-    for percentage, grid in tqdm(
-        zip(percentage_range, random_grids), total=len(percentage_range)
+    for proportion_immune, grid in tqdm(
+        zip(proportion_immune_range, random_grids), total=len(proportion_immune_range)
     ):
 
         ### SINGLE SIMULATION ###
 
         # initialise immune cells.
         ijs = np.random.randint(
-            0, grid_size, size=(int(grid_size**2 * percentage), 2)
+            0, grid_size, size=(int(grid_size**2 * proportion_immune), 2)
         )
         for i, j in ijs:
             grid[i, j] = 3
 
-        inf_sites_list = np.zeros(no_iterations)
+        proportion_infected_list = np.zeros(simulation_length)
 
-        for k in range(no_iterations + 100):
-            inf_sites = update_grid(None, None, grid, grid_size, p_vals)[1]
-            if inf_sites == 0:
+        for step in range(simulation_length + 100):
+            proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+            if proportion_infected <= 1E-5:
                 break
 
             # only take measurements past 100 sweeps
-            if k >= 100:
-                inf_sites_list[k - 100] = inf_sites
+            if step >= 100:
+                proportion_infected_list[step - 100] = proportion_infected
 
-        # save the evolution of this simulation
+        # save the evolution of this simulation, only every 10th measurement to prevent autocorrelation.
         np.savetxt(
-            f"SIRS_data/immunity.{percentage}.{p1}.{p2}.{p3}.dat", inf_sites_list[::10]
+            f"SIRS_data/immunity.{proportion_immune}.{p1}.{p2}.{p3}.dat", proportion_infected_list[::10]
         )
 
         # save only the average infected from this simulation
         with open(f"SIRS_data/immunity_plot.{p1}.{p2}.{p3}.dat", "a") as f:
-            f.write(f"{percentage},{np.average(inf_sites_list)/grid_size**2}\n")
+            f.write(f"{proportion_immune},{np.average(proportion_infected_list)}\n")
 
         ### END SINGLE SIMULATION ###
 
 
-def get_bootstrap_error_immun(filename):
+def get_jacknife_error(filename):
 
     inf_list = np.loadtxt(filename)
 
-    k = 100
-    n = int(0.8 * len(inf_list))
+    c = np.average(inf_list)
 
-    av_infecteds = np.zeros(k)
+    av_infecteds = np.zeros(len(inf_list))
 
-    for i in range(k):
-        infecteds = np.random.choice(inf_list, n)
+    for i in range(inf_list):
+        infecteds = np.concatenate((inf_list[:i], inf_list[i:]))
         av_infecteds[i] = np.average(infecteds)
 
-    error = np.std(av_infecteds) / 50**2
+    error = np.sqrt(np.sum((av_infecteds - c)**2))
     return error
 
 
@@ -275,19 +274,9 @@ def plot_immunity():
     percentages = np.array(data[:, 0])
     inf_list = np.array(data[:, 1])
 
-    errors = []
-
-    # get the error for each percentage's average no. infected using the bootstrap method.
-    for percentage in percentages:
-        errors.append(
-            get_bootstrap_error_immun(
-                f"SIRS_data/immunity.{percentage}.{p1}.{p2}.{p3}.dat"
-            )
-        )
-
-    # plot average infection as a function of percentage immune.
+    # plot average infection as a function of proportion_immune immune.
     fig, ax = plt.subplots()
-    ax.errorbar(percentages, inf_list, yerr=errors, fmt="x")
+    ax.errorbar(percentages, inf_list, fmt="x")
     ax.set_xlabel("Proportion immune")
     ax.set_ylabel("Average proportion infected over 1000 iterations")
     plt.show()
