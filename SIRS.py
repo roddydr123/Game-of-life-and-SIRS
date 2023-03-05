@@ -104,7 +104,9 @@ def variance(grid_size):
             proportion_infected_list = np.zeros(simulation_length)
 
             for step in range(simulation_length + 100):
-                proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+                proportion_infected = (
+                    update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+                )
                 if proportion_infected == 0:
                     break
 
@@ -114,12 +116,13 @@ def variance(grid_size):
 
             proportion_infected_list = proportion_infected_list[::10]
 
-            np.savetxt(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat", proportion_infected_list)
+            np.savetxt(
+                f"SIRS_data/variance.{p1}.{p2}.{p3}.dat", proportion_infected_list
+            )
 
             # save the variance infected for that simulation
             with open(f"SIRS_data/variance_plot.dat", "a") as f:
                 f.write(f"{p1},{p2},{p3},{np.var(proportion_infected_list)}\n")
-            
 
             ### SINGLE SIMULATION END ###
 
@@ -127,28 +130,29 @@ def variance(grid_size):
 def plot_variance(colour):
 
     data = np.genfromtxt(
-            "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
-        )
-    
+        "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
+    )
+
     fig, ax = plt.subplots()
 
-    if colour == 'False':
+    if colour == "False":
 
         # make cut from data at p1,p2,p3 = p1,0.5,0.5
-        selected_points = data[data[:,2] == 0.5]
+        selected_points = data[data[:, 2] == 0.5]
 
         errors = []
 
         # get the error for each variance using the bootstrap method.
-        for p1, p2, p3 in zip(selected_points[:, 0], selected_points[:, 1], selected_points[:, 2]):
+        for p1, p2, p3 in zip(
+            selected_points[:, 0], selected_points[:, 1], selected_points[:, 2]
+        ):
             errors.append(get_jacknife_error(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat"))
 
         # plot variance as a function of p1.
         p1s = np.array(selected_points[:, 0])
-        ax.errorbar(p1s, selected_points[:,3], yerr=errors)
+        ax.errorbar(p1s, selected_points[:, 3], yerr=errors)
         ax.set_xlabel("P1")
         ax.set_ylabel("normalised variance of infected")
-        
 
     else:
         d_l = int(len(data) ** (1 / 2))
@@ -156,7 +160,7 @@ def plot_variance(colour):
         ax.imshow(av_I, origin="lower", extent=(0, 1, 0, 1))
         ax.set_xlabel("P1")
         ax.set_ylabel("P3")
-    
+
     plt.show()
 
 
@@ -181,7 +185,9 @@ def phase(grid_size):
 
             # run 1100 times to get measurements
             for step in range(1100):
-                proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+                proportion_infected = (
+                    update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+                )
                 if proportion_infected == 0:
                     break
 
@@ -193,7 +199,9 @@ def phase(grid_size):
             proportion_infected_list = proportion_infected_list[::10]
 
             # save the evolution of that simulation
-            np.savetxt(f"SIRS_data/infected.{p1}.{p2}.{p3}.dat", proportion_infected_list)
+            np.savetxt(
+                f"SIRS_data/infected.{p1}.{p2}.{p3}.dat", proportion_infected_list
+            )
 
             # save the average infected for that simulation
             with open(f"SIRS_data/infected_plot.dat", "a") as f:
@@ -246,8 +254,10 @@ def immunity(grid, grid_size, p_vals):
         proportion_infected_list = np.zeros(simulation_length)
 
         for step in range(simulation_length + 100):
-            proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
-            if proportion_infected <= 1E-5:
+            proportion_infected = (
+                update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+            )
+            if proportion_infected <= 1e-5:
                 break
 
             # only take measurements past 100 sweeps
@@ -258,7 +268,8 @@ def immunity(grid, grid_size, p_vals):
 
         # save the evolution of this simulation, only every 10th measurement to prevent autocorrelation.
         np.savetxt(
-            f"SIRS_data/immunity.{proportion_immune}.{p1}.{p2}.{p3}.dat", proportion_infected_list
+            f"SIRS_data/immunity.{proportion_immune}.{p1}.{p2}.{p3}.dat",
+            proportion_infected_list,
         )
 
         # save only the average infected from this simulation
@@ -277,11 +288,11 @@ def get_jacknife_error(filename):
     av_vars = np.zeros(len(inf_list))
 
     for i in range(len(inf_list)):
-        other_var = np.var(inf_list[np.arange(len(inf_list))!=i])
+        other_var = np.var(inf_list[np.arange(len(inf_list)) != i])
         # other_vars = np.concatenate((inf_list[:i], inf_list[i:]))
         av_vars[i] = other_var
 
-    error = np.sqrt(np.sum((av_vars - c)**2))
+    error = np.sqrt(np.sum((av_vars - c) ** 2))
     return error
 
 

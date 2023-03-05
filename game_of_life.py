@@ -20,20 +20,20 @@ def update_grid(frame, im, grid, grid_size, mode):
         for j in range(grid_size):
             # Count the number of live neighbours for the current cell
             num_neighbours = (
-                grid[(i-1)%grid_size,(j-1)%grid_size] +
-                grid[(i-1)%grid_size,j] +
-                grid[(i-1)%grid_size,(j+1)%grid_size] +
-                grid[i,(j-1)%grid_size] +
-                grid[i,(j+1)%grid_size] +
-                grid[(i+1)%grid_size,(j-1)%grid_size] +
-                grid[(i+1)%grid_size,j] +
-                grid[(i+1)%grid_size,(j+1)%grid_size]
+                grid[(i - 1) % grid_size, (j - 1) % grid_size]
+                + grid[(i - 1) % grid_size, j]
+                + grid[(i - 1) % grid_size, (j + 1) % grid_size]
+                + grid[i, (j - 1) % grid_size]
+                + grid[i, (j + 1) % grid_size]
+                + grid[(i + 1) % grid_size, (j - 1) % grid_size]
+                + grid[(i + 1) % grid_size, j]
+                + grid[(i + 1) % grid_size, (j + 1) % grid_size]
             )
             # Apply the rules of the game of life
-            if grid[i,j] == 1 and (num_neighbours < 2 or num_neighbours > 3):
-                new_grid[i,j] = 0
-            elif grid[i,j] == 0 and num_neighbours == 3:
-                new_grid[i,j] = 1
+            if grid[i, j] == 1 and (num_neighbours < 2 or num_neighbours > 3):
+                new_grid[i, j] = 0
+            elif grid[i, j] == 0 and num_neighbours == 3:
+                new_grid[i, j] = 1
 
     grid[:] = new_grid[:]
 
@@ -77,7 +77,9 @@ def visualisation(grid, grid_size, mode):
     im = ax.imshow(grid)
 
     # Create the animation object
-    ani = animation.FuncAnimation(fig, update_grid, frames=1000, fargs=(im, grid, grid_size, mode), interval=10)
+    ani = animation.FuncAnimation(
+        fig, update_grid, frames=1000, fargs=(im, grid, grid_size, mode), interval=10
+    )
 
     # Display the animation
     plt.show()
@@ -129,12 +131,12 @@ def c_o_m(grid, grid_size):
     banned = [0, grid_size]
     for i in range(grid_size):
         for j in range(grid_size):
-            if grid[i,j] == 1:
+            if grid[i, j] == 1:
                 if i in banned or j in banned:
                     return None
                 x_list.append(i)
                 y_list.append(j)
-                
+
     com_x = np.average(x_list)
     com_y = np.average(y_list)
     return com_x, com_y
@@ -152,7 +154,7 @@ def plot_glider_com():
         grid = update_grid(None, None, grid, grid_size, "G")[2]
         if i % 10 == 0:
             try:
-                x,y = c_o_m(grid, grid_size)
+                x, y = c_o_m(grid, grid_size)
                 com_x_list.append(x)
                 com_y_list.append(y)
                 times_list.append(i)
@@ -172,7 +174,7 @@ def plot_glider_com():
     ypopt, ypcov = curve_fit(linear, times_listv, com_y_listv)
     y_velocity = ypopt[0]
 
-    total_v = (x_velocity**2 + y_velocity**2)**(1/2)
+    total_v = (x_velocity**2 + y_velocity**2) ** (1 / 2)
 
     print(f"{total_v} pixels per sweep")
 
@@ -181,7 +183,6 @@ def plot_glider_com():
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("X position")
     # np.savetxt("GoL_data/x_velocity_fit.dat", np.stack((times_listv, com_x_listv), axis=1))
-
 
     # plt.plot(times_listv, linear(times_listv, *ypopt), label="Linear fit")
     # plt.scatter(times_listv, com_y_listv, label="COM position")
@@ -193,7 +194,11 @@ def plot_glider_com():
     plt.ylabel("Y coordinate")
     plt.title(f"Velocity: {round(total_v, 2)} pixels per sweep")
     plt.scatter(com_x_list, com_y_list)
-    np.savetxt("GoL_data/glider_position.dat", np.stack((com_x_list, com_y_list), axis=1), header="glider x position, glider y position")
+    np.savetxt(
+        "GoL_data/glider_position.dat",
+        np.stack((com_x_list, com_y_list), axis=1),
+        header="glider x position, glider y position",
+    )
     plt.legend()
     plt.show()
 
@@ -217,6 +222,7 @@ def main():
         print("invalid mode")
         sys.exit()
     visualisation(grid, grid_size, mode)
+
 
 # main()
 # equilibrations()
