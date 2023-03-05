@@ -43,9 +43,9 @@ def update_grid(frame, im, grid, grid_size, p_vals):
 
     if im:
         im.set_data(grid)
-    proportion_infected = np.sum(grid == 1)
+    infected = np.sum(grid == 1)
 
-    return im, proportion_infected
+    return im, infected
 
 
 def visualisation(grid, grid_size, p_vals):
@@ -64,31 +64,14 @@ def visualisation(grid, grid_size, p_vals):
     plt.show()
 
 
-def get_bootstrap_error(filename):
+def colour_variance(grid_size):
 
-    inf_list = np.loadtxt(filename)
-
-    step = 100
-    n = int(0.8 * len(inf_list))
-
-    variances = np.zeros(step)
-
-    for i in range(step):
-        other_vars = np.random.choice(inf_list, n)
-        variances[i] = np.var(other_vars)
-
-    error = np.std(variances / 50**2)
-    return error
-
-
-def variance(grid_size):
-
-    p_space = np.arange(0, 1, 0.05)
+    p_space = np.arange(0.2, 0.5, 0.05)
     p2 = 0.5
 
-    simulation_length = 10000
+    simulation_length = 1000
 
-    with open("SIRS_data/variance_plot.dat", "w") as f:
+    with open("SIRS_data/variance_line_plot.dat", "w") as f:
         f.write("p1, p2, p3, variance(I)/N\n")
 
     random_grid = np.random.randint(
@@ -101,41 +84,87 @@ def variance(grid_size):
             ### BEGIN SINGLE SIMULATION ###
 
             p_vals = [p1, p2, p3]
-            proportion_infected_list = np.zeros(simulation_length)
+            infected_list = np.zeros(simulation_length)
 
             for step in range(simulation_length + 100):
-                proportion_infected = (
-                    update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
+                infected = (
+                    update_grid(None, None, grid, grid_size, p_vals)[1]
                 )
-                if proportion_infected == 0:
+                if infected == 0:
                     break
 
                 # only take measurements past 100 sweeps
                 if step >= 100:
-                    proportion_infected_list[step - 100] = proportion_infected
+                    infected_list[step - 100] = infected
 
-            proportion_infected_list = proportion_infected_list[::10]
+            infected_list = infected_list[::10]
 
             np.savetxt(
-                f"SIRS_data/variance.{p1}.{p2}.{p3}.dat", proportion_infected_list
+                f"SIRS_data/variance_line.{p1}.{p2}.{p3}.dat", infected_list
             )
 
             # save the variance infected for that simulation
-            with open(f"SIRS_data/variance_plot.dat", "a") as f:
-                f.write(f"{p1},{p2},{p3},{np.var(proportion_infected_list)}\n")
+            with open(f"SIRS_data/variance_line_plot.dat", "a") as f:
+                f.write(f"{p1},{p2},{p3},{np.var(infected_list)}\n")
 
             ### SINGLE SIMULATION END ###
 
 
-def plot_variance(colour):
+def line_variance(grid_size):
 
-    data = np.genfromtxt(
-        "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
+    p_space = np.arange(0.2, 0.5, 0.05)
+    p2 = 0.5
+    p3 = 0.5
+
+    simulation_length = 10000
+
+    with open("SIRS_data/variance_line_plot.dat", "w") as f:
+        f.write("p1, p2, p3, variance(I)/N\n")
+
+    random_grid = np.random.randint(
+        3, size=(len(p_space), len(p_space), grid_size, grid_size)
     )
+
+    for p1, grid in tqdm(zip(p_space, random_grid[0]), total=len(p_space)):
+
+        ### BEGIN SINGLE SIMULATION ###
+
+        p_vals = [p1, p2, p3]
+        infected_list = np.zeros(simulation_length)
+
+        for step in range(simulation_length + 100):
+            infected = (
+                update_grid(None, None, grid, grid_size, p_vals)[1]
+            )
+            if infected == 0:
+                break
+
+            # only take measurements past 100 sweeps
+            if step >= 100:
+                infected_list[step - 100] = infected
+
+        infected_list = infected_list[::10]
+
+        np.savetxt(
+            f"SIRS_data/variance_line.{p1}.{p2}.{p3}.dat", infected_list
+        )
+
+        # save the variance infected for that simulation
+        with open(f"SIRS_data/variance_line_plot.dat", "a") as f:
+            f.write(f"{p1},{p2},{p3},{np.var(infected_list)}\n")
+
+        ### SINGLE SIMULATION END ###
+
+
+def plot_variance(colour, grid_size):
 
     fig, ax = plt.subplots()
 
     if colour == "False":
+
+        data = np.genfromtxt(
+        "SIRS_data/variance_line_plot.dat", delimiter=",", skip_header=1, dtype=float
+        )
 
         # make cut from data at p1,p2,p3 = p1,0.5,0.5
         selected_points = data[data[:, 2] == 0.5]
@@ -146,18 +175,25 @@ def plot_variance(colour):
         for p1, p2, p3 in zip(
             selected_points[:, 0], selected_points[:, 1], selected_points[:, 2]
         ):
-            errors.append(get_jacknife_error(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat"))
+            errors.append(get_jacknife_error(f"SIRS_data/variance_line.{p1}.{p2}.{p3}.dat"))
 
+        errors = np.array(errors) / grid_size**2
+        norm_variance = selected_points[:, 3] / grid_size**2
         # plot variance as a function of p1.
         p1s = np.array(selected_points[:, 0])
-        ax.errorbar(p1s, selected_points[:, 3], yerr=errors)
+        ax.errorbar(p1s, norm_variance, yerr=errors)
         ax.set_xlabel("P1")
         ax.set_ylabel("normalised variance of infected")
 
     else:
+        data = np.genfromtxt(
+        "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
+        )
         d_l = int(len(data) ** (1 / 2))
-        av_I = np.array(data[:, 3]).reshape((d_l, d_l))
-        ax.imshow(av_I, origin="lower", extent=(0, 1, 0, 1))
+        av_I = np.array(data[:, 3]).reshape((d_l, d_l)).T / grid_size**2
+        im = ax.imshow(av_I, origin="lower", extent=(0, 1, 0, 1))
+        cbar = plt.colorbar(im, ax=ax)
+        cbar.set_label("Var(I) / N")
         ax.set_xlabel("P1")
         ax.set_ylabel("P3")
 
@@ -168,6 +204,8 @@ def phase(grid_size):
 
     p_space = np.arange(0, 1, 0.01)
     p2 = 0.5
+
+    simulation_length = 1000
 
     with open("SIRS_data/infected_plot.dat", "w") as f:
         f.write("p1,p2,p3,average I\n")
@@ -181,10 +219,10 @@ def phase(grid_size):
 
             # for each set of probabilities
             p_vals = [p1, p2, p3]
-            proportion_infected_list = np.zeros(1000)
+            proportion_infected_list = np.zeros(simulation_length)
 
             # run 1100 times to get measurements
-            for step in range(1100):
+            for step in range(simulation_length + 100):
                 proportion_infected = (
                     update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
                 )
@@ -194,9 +232,6 @@ def phase(grid_size):
                 # only take measurements past 100 sweeps
                 if step >= 100:
                     proportion_infected_list[step - 100] = proportion_infected
-
-            # every 10th measurement to prevent autocorrelation
-            proportion_infected_list = proportion_infected_list[::10]
 
             # save the evolution of that simulation
             np.savetxt(
@@ -213,11 +248,13 @@ def plot_phase():
         "SIRS_data/infected_plot.dat", delimiter=",", skip_header=1, dtype=float
     )
     d_l = int(len(data) ** (1 / 2))
-    av_I = np.array(data[:, 3]).reshape((d_l, d_l))
+    av_I = np.array(data[:, 3]).reshape((d_l, d_l)).T
     fig, ax = plt.subplots()
-    ax.imshow(av_I, origin="lower", extent=(0, 1, 0, 1))
+    im = ax.imshow(av_I, origin="lower", extent=(0, 1, 0, 1))
     ax.set_xlabel("P1")
     ax.set_ylabel("P3")
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label("Average infected per grid element")
     plt.show()
 
 
@@ -289,7 +326,6 @@ def get_jacknife_error(filename):
 
     for i in range(len(inf_list)):
         other_var = np.var(inf_list[np.arange(len(inf_list)) != i])
-        # other_vars = np.concatenate((inf_list[:i], inf_list[i:]))
         av_vars[i] = other_var
 
     error = np.sqrt(np.sum((av_vars - c) ** 2))
@@ -329,7 +365,7 @@ def main():
         plot_phase()
         return
     elif mode == "var_plot":
-        plot_variance(colour=cmd_args[2])
+        plot_variance(cmd_args[2], int(cmd_args[3]))
         return
     elif mode == "immunity_plot":
         plot_immunity()
@@ -345,8 +381,10 @@ def main():
         visualisation(grid, grid_size, p_vals)
     elif mode == "phase":
         phase(grid_size)
-    elif mode == "var":
-        variance(grid_size)
+    elif mode == "line_var":
+        line_variance(grid_size)
+    elif mode == "colour_var":
+        colour_variance(grid_size)
     elif mode == "timer":
         t = timeit.Timer(
             lambda: update_grid(None, None, grid, grid_size, [0.5, 0.5, 0.5])
