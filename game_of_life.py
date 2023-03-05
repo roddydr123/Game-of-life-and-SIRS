@@ -178,13 +178,13 @@ def plot_glider_com():
 
     print(f"{total_v} pixels per sweep")
 
-    # plt.plot(times_listv, linear(times_listv, *xpopt), label="Linear fit")
+    # plt.plot(times_listv, linear(times_listv, *xpopt), label=f"y = {round(xpopt[0], 1)} x + {round(xpopt[1], 1)}")
     # plt.scatter(times_listv, com_x_listv, label="COM position")
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("X position")
     # np.savetxt("GoL_data/x_velocity_fit.dat", np.stack((times_listv, com_x_listv), axis=1))
 
-    # plt.plot(times_listv, linear(times_listv, *ypopt), label="Linear fit")
+    # plt.plot(times_listv, linear(times_listv, *ypopt), label=f"y = {round(ypopt[0], 1)} x + {round(ypopt[1], 1)}")
     # plt.scatter(times_listv, com_y_listv, label="COM position")
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("Y position")
@@ -224,7 +224,7 @@ def main():
     visualisation(grid, grid_size, mode)
 
 
-# main()
+main()
 # equilibrations()
 # plot_equilibrations()
-plot_glider_com()
+# plot_glider_com()
