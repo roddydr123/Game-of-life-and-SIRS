@@ -8,7 +8,11 @@ import timeit
 
 def update_grid(frame, im, grid, grid_size, p_vals):
 
+    # array of random indices for one sweep.
     ijs = np.random.randint(0, grid_size, size=(grid_size**2, 2))
+
+    # array of probabilities for S -> I - > R -> S.
+    random_probs = np.random.rand(grid_size**2)
 
     for step in range(grid_size**2):
 
@@ -24,17 +28,17 @@ def update_grid(frame, im, grid, grid_size, p_vals):
             )
             # if there's an infected next door
             if 1 in neighbours:
-                if p_vals[0] > np.random.rand():
+                if p_vals[0] > random_probs[step]:
                     grid[i,j] = 1
 
         # if infected
         elif grid[i,j] == 1:
-            if p_vals[1] > np.random.rand():
+            if p_vals[1] > random_probs[step]:
                 grid[i,j] = 2
 
         # if recovered
         elif grid[i,j] == 2:
-            if p_vals[2] > np.random.rand():
+            if p_vals[2] > random_probs[step]:
                 grid[i,j] = 0
 
     if im:
