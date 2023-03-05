@@ -6,19 +6,22 @@ from scipy.optimize import curve_fit
 
 
 def linear(x, m, c):
+    # function for fitting a straight line.
     return (m * x) + c
 
 
 def update_grid(frame, im, grid, grid_size, mode):
 
+    # count the number of active elements.
     active_sites = np.sum(grid)
 
-    # Copy the current grid to avoid overwriting values
+    # avoid overwriting.
     new_grid = grid.copy()
-    # Loop over each cell in the grid
+
+    # loop over each cell in the grid.
     for i in range(grid_size):
         for j in range(grid_size):
-            # Count the number of live neighbours for the current cell
+            # live neighbour count
             num_neighbours = (
                 grid[(i - 1) % grid_size, (j - 1) % grid_size]
                 + grid[(i - 1) % grid_size, j]
@@ -29,12 +32,15 @@ def update_grid(frame, im, grid, grid_size, mode):
                 + grid[(i + 1) % grid_size, j]
                 + grid[(i + 1) % grid_size, (j + 1) % grid_size]
             )
-            # Apply the rules of the game of life
+            # if the cell is alive...
             if grid[i, j] == 1 and (num_neighbours < 2 or num_neighbours > 3):
                 new_grid[i, j] = 0
+
+            # if cell is dead
             elif grid[i, j] == 0 and num_neighbours == 3:
                 new_grid[i, j] = 1
 
+    # set the grid to new values simultaneously
     grid[:] = new_grid[:]
 
     try:
@@ -50,6 +56,7 @@ def random_grid(grid_size):
 
 
 def oscillator_grid(grid_size):
+    # put a small ocillator in the middle of the grid
     grid = np.zeros((grid_size, grid_size))
     mid = int(grid_size / 2)
     grid[mid, mid] = 1
@@ -59,6 +66,7 @@ def oscillator_grid(grid_size):
 
 
 def glider_grid(grid_size):
+    # put a glider near the centre of the grid
     grid = np.zeros((grid_size, grid_size))
     mid = int(grid_size / 2.3)
     grid[mid, mid] = 1
@@ -86,6 +94,7 @@ def visualisation(grid, grid_size, mode):
 
 
 def equilibrations():
+    # run without visualisation
     grid_size = 50
 
     # number of runs
@@ -178,13 +187,13 @@ def plot_glider_com():
 
     print(f"{total_v} pixels per sweep")
 
-    # plt.plot(times_listv, linear(times_listv, *xpopt), label=f"y = {round(xpopt[0], 1)} x + {round(xpopt[1], 1)}")
+    # plt.plot(times_listv, linear(times_listv, *xpopt), label=f"y = {round(xpopt[0], 2)} x + {round(xpopt[1], 1)}")
     # plt.scatter(times_listv, com_x_listv, label="COM position")
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("X position")
     # np.savetxt("GoL_data/x_velocity_fit.dat", np.stack((times_listv, com_x_listv), axis=1))
 
-    # plt.plot(times_listv, linear(times_listv, *ypopt), label=f"y = {round(ypopt[0], 1)} x + {round(ypopt[1], 1)}")
+    # plt.plot(times_listv, linear(times_listv, *ypopt), label=f"y = {round(ypopt[0], 2)} x + {round(ypopt[1], 1)}")
     # plt.scatter(times_listv, com_y_listv, label="COM position")
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("Y position")
@@ -224,7 +233,7 @@ def main():
     visualisation(grid, grid_size, mode)
 
 
-main()
+# main()
 # equilibrations()
 # plot_equilibrations()
-# plot_glider_com()
+plot_glider_com()
