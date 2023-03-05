@@ -158,6 +158,10 @@ def plot_glider_com():
                 times_list.append(i)
             except:
                 pass
+
+    times_list = np.array(times_list)
+    com_x_list = np.array(com_x_list)
+    com_y_list = np.array(com_y_list)
     times_listv = np.array(times_list)[10:15]
     com_x_listv = np.array(com_x_list)[10:15]
     com_y_listv = np.array(com_y_list)[10:15]
@@ -172,20 +176,24 @@ def plot_glider_com():
 
     print(f"{total_v} pixels per sweep")
 
-    # plt.plot(times_list, linear(times_list, *xpopt), label="Linear fit")
-    # plt.scatter(times_list, com_x_list, label="COM position")
+    # plt.plot(times_listv, linear(times_listv, *xpopt), label="Linear fit")
+    # plt.scatter(times_listv, com_x_listv, label="COM position")
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("X position")
+    # np.savetxt("GoL_data/x_velocity_fit.dat", np.stack((times_listv, com_x_listv), axis=1))
 
-    # plt.plot(times_list, linear(times_list, *ypopt), label="Linear fit")
-    # plt.scatter(times_list, com_y_list, label="COM position")
+
+    # plt.plot(times_listv, linear(times_listv, *ypopt), label="Linear fit")
+    # plt.scatter(times_listv, com_y_listv, label="COM position")
     # plt.xlabel("Time (sweeps)")
     # plt.ylabel("Y position")
+    # np.savetxt("GoL_data/y_velocity_fit.dat", np.stack((times_listv, com_y_listv), axis=1))
 
     plt.xlabel("X coordinate")
     plt.ylabel("Y coordinate")
     plt.title(f"Velocity: {round(total_v, 2)} pixels per sweep")
     plt.scatter(com_x_list, com_y_list)
+    np.savetxt("GoL_data/glider_position.dat", np.stack((com_x_list, com_y_list), axis=1), header="glider x position, glider y position")
     plt.legend()
     plt.show()
 

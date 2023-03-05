@@ -1,0 +1,19 @@
+Game of Life:
+	- histogram of equlibration times (equil-histo.png).
+		- plot data file (equlibrations.dat)
+	- glider centre of mass position over time (velocity.png).
+		- data file (glider_position.dat)
+	- x location vs # sweeps (x_fit.png).
+		- x_velocity_fit.png
+	- y location vs # sweeps (y_fit.png).
+		- y_velocity_fit.png
+
+
+SIRS model:
+	- phase diagram of infection (infected.png).
+		- plot data file (infected_plot.dat).
+	
+	- infection vs immunity, p1,2,3 = 0.5,0.5,0.5 (immunity_equal.png).
+		- data file (immunity_plot.0.5.0.5.0.5.dat)
+	- infection vs immunity, p1,2,3 = 0.8,0.1,0.02 (immunity_real.png).
+		- data file (immunity_plot.0.8.0.1.0.02.dat)
