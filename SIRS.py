@@ -74,8 +74,8 @@ def get_bootstrap_error(filename):
     variances = np.zeros(step)
 
     for i in range(step):
-        infecteds = np.random.choice(inf_list, n)
-        variances[i] = np.var(infecteds)
+        other_vars = np.random.choice(inf_list, n)
+        variances[i] = np.var(other_vars)
 
     error = np.std(variances / 50**2)
     return error
@@ -124,7 +124,7 @@ def variance(grid_size):
             ### SINGLE SIMULATION END ###
 
 
-def plot_variance(colour=True):
+def plot_variance(colour):
 
     data = np.genfromtxt(
             "SIRS_data/variance_plot.dat", delimiter=",", skip_header=1, dtype=float
@@ -132,21 +132,20 @@ def plot_variance(colour=True):
     
     fig, ax = plt.subplots()
 
-    if not colour:
-        norm_var_I = np.array(data[:, 3])
+    if colour == 'False':
 
         # make cut from data at p1,p2,p3 = p1,0.5,0.5
-        y = data[data[:,2] == 0.5]
+        selected_points = data[data[:,2] == 0.5]
 
         errors = []
 
         # get the error for each variance using the bootstrap method.
-        for p1, p2, p3 in zip(data[:, 0], data[:, 1], data[:, 2]):
-            errors.append(get_bootstrap_error(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat"))
+        for p1, p2, p3 in zip(selected_points[:, 0], selected_points[:, 1], selected_points[:, 2]):
+            errors.append(get_jacknife_error(f"SIRS_data/variance.{p1}.{p2}.{p3}.dat"))
 
         # plot variance as a function of p1.
-        p1s = np.array(data[:, 0])
-        ax.errorbar(p1s, norm_var_I, yerr=errors)
+        p1s = np.array(selected_points[:, 0])
+        ax.errorbar(p1s, selected_points[:,3], yerr=errors)
         ax.set_xlabel("P1")
         ax.set_ylabel("normalised variance of infected")
         
@@ -273,15 +272,16 @@ def get_jacknife_error(filename):
 
     inf_list = np.loadtxt(filename)
 
-    c = np.average(inf_list)
+    c = np.var(inf_list)
 
-    av_infecteds = np.zeros(len(inf_list))
+    av_vars = np.zeros(len(inf_list))
 
-    for i in range(inf_list):
-        infecteds = np.concatenate((inf_list[:i], inf_list[i:]))
-        av_infecteds[i] = np.average(infecteds)
+    for i in range(len(inf_list)):
+        other_var = np.var(inf_list[np.arange(len(inf_list))!=i])
+        # other_vars = np.concatenate((inf_list[:i], inf_list[i:]))
+        av_vars[i] = other_var
 
-    error = np.sqrt(np.sum((av_infecteds - c)**2))
+    error = np.sqrt(np.sum((av_vars - c)**2))
     return error
 
 
@@ -318,7 +318,7 @@ def main():
         plot_phase()
         return
     elif mode == "var_plot":
-        plot_variance(colour=bool(cmd_args[2]))
+        plot_variance(colour=cmd_args[2])
         return
     elif mode == "immunity_plot":
         plot_immunity()
