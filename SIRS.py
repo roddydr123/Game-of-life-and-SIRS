@@ -162,7 +162,7 @@ def plot_variance(colour):
 
 def phase(grid_size):
 
-    p_space = np.arange(0, 1, 0.05)
+    p_space = np.arange(0, 1, 0.01)
     p2 = 0.5
 
     with open("SIRS_data/infected_plot.dat", "w") as f:
@@ -181,7 +181,7 @@ def phase(grid_size):
 
             # run 1100 times to get measurements
             for step in range(1100):
-                proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1]
+                proportion_infected = update_grid(None, None, grid, grid_size, p_vals)[1] / grid_size**2
                 if proportion_infected == 0:
                     break
 
