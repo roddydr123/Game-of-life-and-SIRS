@@ -133,7 +133,16 @@ def plot_equilibrations():
     plt.show()
 
 
-def c_o_m(grid, grid_size):
+def c_o_m(grid:np.ndarray, grid_size:int) -> tuple[float,float]:
+    """Find the location of the centre of mass.
+
+    Args:
+        grid (np.ndarray): Any grid.
+        grid_size (int): Grid dimensions.
+
+    Returns:
+        tuple: x and y positions of the centre of mass.
+    """
 
     x_list = []
     y_list = []
@@ -152,6 +161,10 @@ def c_o_m(grid, grid_size):
 
 
 def plot_glider_com():
+    """Make a line plot of the glider's centre of mass. This can be a plot of
+    x or y position vs number of sweeps, or CoM plotted in x and y once per sweep.
+    """
+
     grid_size = 50
     grid = glider_grid(grid_size)
 
@@ -233,7 +246,7 @@ def main():
     visualisation(grid, grid_size, mode)
 
 
-# main()
+main()
 # equilibrations()
 # plot_equilibrations()
-plot_glider_com()
+# plot_glider_com()
