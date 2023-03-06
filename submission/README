@@ -1,3 +1,14 @@
+to run the game of life visualisation:
+
+python game_of_life.py <mode> (where mode is R for random, O for oscillator, G for glider)
+
+to run the SIRS visualisation:
+
+python SIRS.py vis <grid_size> <p1> <p2> <p3>
+
+
+CONTENTS OF SUBMISSION
+
 Game of Life:
 	- histogram of equlibration times (equil-histo.png).
 		- plot data file (equlibrations.dat)
@@ -12,7 +23,10 @@ Game of Life:
 SIRS model:
 	- phase diagram of infection (infected.png).
 		- plot data file (infected_plot.dat).
-	
+	- colour map of variance in p1 and p3 with p2=0.5 (variance_colour.png).
+		- variance_plot.dat
+	- plot of average variance for a slice of p1, p2=p3=0.5 (variance_line_plot.png).
+		- variance_line_plot.dat
 	- infection vs immunity, p1,2,3 = 0.5,0.5,0.5 (immunity_equal.png).
 		- data file (immunity_plot.0.5.0.5.0.5.dat)
 	- infection vs immunity, p1,2,3 = 0.8,0.1,0.02 (immunity_real.png).
