@@ -172,6 +172,7 @@ def plot_glider_com():
     com_y_list = []
     times_list = []
 
+    # only run 200 iterations, and record the x and y positions
     for i in range(200):
         grid = update_grid(None, None, grid, grid_size, "G")[2]
         if i % 10 == 0:
@@ -183,6 +184,7 @@ def plot_glider_com():
             except:
                 pass
 
+    # take small section of data to apply a linear fit
     times_list = np.array(times_list)
     com_x_list = np.array(com_x_list)
     com_y_list = np.array(com_y_list)
@@ -190,12 +192,14 @@ def plot_glider_com():
     com_x_listv = np.array(com_x_list)[10:15]
     com_y_listv = np.array(com_y_list)[10:15]
 
+    # fit straight lines to x and y position vs number of sweeps
     xpopt, xpcov = curve_fit(linear, times_listv, com_x_listv)
     x_velocity = xpopt[0]
 
     ypopt, ypcov = curve_fit(linear, times_listv, com_y_listv)
     y_velocity = ypopt[0]
 
+    # find the velocity by taking the magnitude
     total_v = (x_velocity**2 + y_velocity**2) ** (1 / 2)
 
     print(f"{total_v} pixels per sweep")
