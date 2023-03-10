@@ -66,7 +66,12 @@ def visualisation(grid, grid_size, p_vals):
     plt.show()
 
 
-def colour_variance(grid_size):
+def colour_variance(grid_size:int):
+    """Make a colour plot of infected variance vs p1 and p3.
+
+    Args:
+        grid_size (int): grid dimensions
+    """
 
     # set the range of probabilities to explore
     p_space = np.arange(0, 1, 0.05)

@@ -231,12 +231,11 @@ def plot_glider_com():
 
 def main():
     cmd_args = sys.argv
-    if len(cmd_args) != 2:
-        print("Usage game_of_life.py <mode> (Random, Oscillator, Glider)")
+    if len(cmd_args) != 3:
+        print("Usage game_of_life.py <mode> <grid size>")
         sys.exit()
     mode = cmd_args[1]
-
-    grid_size = 50
+    grid_size = int(cmd_args[2])
 
     if mode == "R":
         grid = random_grid(grid_size)

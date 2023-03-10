@@ -1,6 +1,6 @@
 to run the game of life visualisation:
 
-python game_of_life.py <mode> (where mode is R for random, O for oscillator, G for glider)
+python game_of_life.py <mode> (where mode is R for random, O for oscillator, G for glider) <grid size>
 
 to run the SIRS visualisation:
 
