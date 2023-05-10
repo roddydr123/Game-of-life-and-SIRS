@@ -186,7 +186,7 @@ def plot_variance(colour:bool, grid_size:int):
     fig, ax = plt.subplots()
 
     # make a line plot
-    if colour == "False":
+    if colour is False:
 
         data = np.genfromtxt(
         "SIRS_data/variance_line_plot.dat", delimiter=",", skip_header=1, dtype=float
@@ -202,7 +202,7 @@ def plot_variance(colour:bool, grid_size:int):
             selected_points[:, 0], selected_points[:, 1], selected_points[:, 2]
         ):
             inf_list = np.loadtxt(f"SIRS_data/variance_line.{p1}.{p2}.{p3}.dat")
-            errors.append(get_bootstrap_error(inf_list, np.var))
+            errors.append(get_bootstrap_error(inf_list, np.var)) # can switch to jacknife
 
         # normalise by no. elements in grid
         errors = np.array(errors) / grid_size**2
@@ -359,30 +359,7 @@ def immunity(grid:np.ndarray, grid_size:int, p_vals:list):
         ### END SINGLE SIMULATION ###
 
 
-def get_jacknife_error(filename:str) -> float:
-    """Use jacknife method to find errors on variance data points.
-
-    Args:
-        filename (str): File to load raw data to be resampled.
-
-    Returns:
-        float: the error on a single point.
-    """
-
-    inf_list = np.loadtxt(filename)
-
-    c = np.var(inf_list)
-
-    av_vars = np.zeros(len(inf_list))
-
-    for i in range(len(inf_list)):
-        other_var = np.var(inf_list[np.arange(len(inf_list)) != i])
-        av_vars[i] = other_var
-
-    error = np.sqrt(np.sum((av_vars - c) ** 2))
-    return error
-
-def get_jacknifed_error(data, interesting_quantity_func):
+def get_jacknife_error(data, interesting_quantity_func):
     """
     Working jacknife error function.
     
@@ -465,42 +442,36 @@ def main():
     """Evaluate command line args to choose a function.
     """
 
-    cmd_args = sys.argv
-    if len(cmd_args) == 1:
-        print("Usage SIRS.py <mode> <grid_size> <p1> <p2> <p3>")
-        sys.exit()
+    mode = sys.argv[1]
 
-    mode = cmd_args[1]
-
-    if mode == "phase_plot":
+    if mode == "plot_phase":
         plot_phase()
         return
-    elif mode == "var_plot":
-        plot_variance(cmd_args[2], int(cmd_args[3]))
-        return
-    elif mode == "immunity_plot":
+    elif mode == "plot_immunity":
         plot_immunity()
         return
 
-    grid_size = int(cmd_args[2])
+    grid_size = int(sys.argv[2])
+
+    if mode == "phase":
+        phase(grid_size)
+        return
+    elif mode == "line_var":
+        line_variance(grid_size)
+        return
+    elif mode == "colour_var":
+        colour_variance(grid_size)
+        return
+    elif mode == "plot_var":
+        colour = sys.argv[3] == "True"
+        plot_variance(colour, grid_size)
+        return
 
     grid = np.random.randint(3, size=(grid_size, grid_size))
-
-    p_vals = [float(x) for x in cmd_args[3:]]
+    p_vals = [float(x) for x in sys.argv[3:6]]
 
     if mode == "vis":
         visualisation(grid, grid_size, p_vals)
-    elif mode == "phase":
-        phase(grid_size)
-    elif mode == "line_var":
-        line_variance(grid_size)
-    elif mode == "colour_var":
-        colour_variance(grid_size)
-    elif mode == "timer":
-        t = timeit.Timer(
-            lambda: update_grid(None, None, grid, grid_size, [0.5, 0.5, 0.5])
-        )
-        print(t.timeit(5))
     elif mode == "immunity":
         immunity(grid, grid_size, p_vals)
 
