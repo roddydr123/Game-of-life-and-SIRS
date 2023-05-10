@@ -201,7 +201,8 @@ def plot_variance(colour:bool, grid_size:int):
         for p1, p2, p3 in zip(
             selected_points[:, 0], selected_points[:, 1], selected_points[:, 2]
         ):
-            errors.append(get_jacknife_error(f"SIRS_data/variance_line.{p1}.{p2}.{p3}.dat"))
+            inf_list = np.loadtxt(f"SIRS_data/variance_line.{p1}.{p2}.{p3}.dat")
+            errors.append(get_bootstrap_error(inf_list, np.var))
 
         # normalise by no. elements in grid
         errors = np.array(errors) / grid_size**2
@@ -380,6 +381,61 @@ def get_jacknife_error(filename:str) -> float:
 
     error = np.sqrt(np.sum((av_vars - c) ** 2))
     return error
+
+def get_jacknifed_error(data, interesting_quantity_func):
+    """
+    Working jacknife error function.
+    
+    data: raw data from which interesting quantity is calculated.
+    
+    interesting quantity func: function which takes raw data and returns interesting quantity.
+    """
+
+    # make sure data to be resampled is an array.
+    data = np.array(data)
+
+    # calculate the interested quantity using all data.
+    all_samples = interesting_quantity_func(data)
+
+    # prepare an array for the quantities calculated with resampling.
+    resampled_quantity = np.zeros(len(data))
+
+    # loop over all the data and remove one sample each time.
+    for i in range(len(data)):
+
+        # array with all but one data point in it.
+        resample = data[np.arange(len(data)) != i]
+
+        # calculate the interesting quantity with the slightly reduced dataset.
+        resampled_quantity[i] = interesting_quantity_func(resample)
+
+    # find the error on the interesting quantity using the calculated values.
+    error = np.sqrt(np.sum((resampled_quantity - all_samples) ** 2))
+    return error
+
+
+def get_bootstrap_error(data, interesting_quantity_func):
+        """working bootstrap method."""
+
+        # how many resamples to do. 1000 should work well.
+        k = 1000
+
+        # prepare array for quantities calculated with resampling.
+        resampled_quantity = np.zeros(k)
+
+        # resample k times.
+        for i in range(k):
+
+            # take a sample from the data, same length as the data set but
+            # resampled with replacement.
+            resample = np.random.choice(data, len(data))
+
+            # calculate the interesting quantity with resampled dataset.
+            resampled_quantity[i] = interesting_quantity_func(resample)
+
+        # find the standard deviation of the newly calculated values.
+        error = np.sqrt(np.var(resampled_quantity))
+        return error
 
 
 def plot_immunity():
